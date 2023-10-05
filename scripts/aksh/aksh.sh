@@ -86,13 +86,13 @@ aks() {
 help() {
     echo 'Help:'
     echo "Create an AKS cluster"
-    echo '$ aks create'
+    echo '$ aksh create'
     echo ""
     echo "Delete an AKS cluster"
-    echo "$ aks delete"
+    echo "$ aksh delete"
     echo ""
     echo "Delete the resource group"
-    echo "$ aks delrg"
+    echo "$ aksh delrg"
     echo ""
 }
 
