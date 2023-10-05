@@ -1,0 +1,6 @@
+[user]
+    email = bpinheiro@microsoft.com
+    name = bpinheiro
+[oh-my-zsh]
+    hide-dirty = 1
+    hide-status = 1
