@@ -7,10 +7,10 @@ location="uksouth"
 #AKS
 aks="aks$date"
 serviceCidr=10.0.242.0/24
+podCIDR=172.16.0.0/16 
 dnsIp=10.0.242.10
 sku="standard_d2as_v4" #"standard_b2s" Cheaper option
 nodeCount=1
-networkPlugin="azure"
 
 #VNET
 vnet="vnet$date"
@@ -41,8 +41,17 @@ aks() {
                     createPrivateCluster
                     break
                     ;;
+                esac
+
+                read -p "Do you want to create a kubenet cluster: (y/n)" yn2
+
+                case $yn2 in
+                y | yes)
+                    createPublicKubenetCluster
+                    break
+                    ;;
                 n | no)
-                    createPublicCluster
+                    createPublicCNICluster
                     break
                     ;;
                 esac
@@ -106,24 +115,32 @@ createVNET(){
     az network vnet create -g $rg -n $vnet --address-prefix $vnetAddr --subnet-name $subnet --subnet-prefixes $subnetAddr
 }
 
-createPublicCluster() {
-    
+createPublicCNICluster() {
     createRG
-
     createVNET
 
     subnetId=$(az network vnet subnet show -g $rg --vnet-name $vnet -n $subnet --query id -o tsv)
 
-    echo "Creating AKS cluster"
-    az aks create -g $rg -n $aks --network-plugin $networkPlugin --vnet-subnet-id $subnetId --service-cidr $serviceCidr --dns-service-ip $dnsIp --node-vm-size $sku --node-count $nodeCount
+    echo "Creating AKS cluster with azure cni"
+    az aks create -g $rg -n $aks --network-plugin azure --vnet-subnet-id $subnetId --service-cidr $serviceCidr --dns-service-ip $dnsIp --node-vm-size $sku --node-count $nodeCount
+
+    echo "az aks get-credentials --resource-group $rg --name $aks -f $KUBECONFIG"
+}
+
+createPublicKubenetCluster(){
+    createRG
+    createVNET
+
+    subnetId=$(az network vnet subnet show -g $rg --vnet-name $vnet -n $subnet --query id -o tsv)
+    
+    echo "Creating AKS cluster with kubenet"
+    az aks create -g $rg -n $aks --network-plugin kubenet --vnet-subnet-id $subnetId --service-cidr $serviceCidr --dns-service-ip $dnsIp --node-vm-size $sku --node-count $nodeCount --pod-cidr $podCIDR
 
     echo "az aks get-credentials --resource-group $rg --name $aks -f $KUBECONFIG"
 }
 
 createPrivateCluster() {
-    
     createRG
-
     createVNET
 
     subnetId=$(az network vnet subnet show -g $rg --vnet-name $vnet -n $subnet --query id -o tsv)
@@ -132,7 +149,6 @@ createPrivateCluster() {
     az aks create -g $rg -n $aks --network-plugin $networkPlugin --vnet-subnet-id $subnetId --service-cidr $serviceCidr --dns-service-ip $dnsIp --node-vm-size $sku --node-count $nodeCount --enable-private-cluster --disable-public-fqdn
 
     createVM
-
 }
 
 createVM(){
