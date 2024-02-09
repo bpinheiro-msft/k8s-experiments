@@ -9,12 +9,9 @@ sudo mv ./acih /usr/local/bin/acih
 
 ## Help:
 ```bash
-Create an AKS cluster
-$ aks create
-
-Delete an AKS cluster
-$ aks delete
+Create an ACI
+$ acih create
 
 Delete the resource group
-$ aks delrg
+$ acih delrg
 ```
